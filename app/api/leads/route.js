@@ -19,8 +19,10 @@ export async function POST(request) {
     const body = await request.json();
     const leadData = {
       name: body.name || "Anonymous",
-      phone: body.phone || body.whatsapp || "",
+      whatsapp: body.whatsapp || body.phone || "",
+      phone: body.phone,
       message: body.message || body.details || "",
+      details: body.details,
     };
     const newLead = await Lead.create(leadData);
     return NextResponse.json({ success: true, lead: newLead }, { status: 201 });

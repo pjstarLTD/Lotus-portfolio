@@ -1,26 +1,14 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const leadSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
+const LeadSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    whatsapp: { type: String, required: true },
+    phone: { type: String },
+    message: { type: String },
+    details: { type: String },
   },
-  email: String,
-  phone: {
-    type: String,
-  },
-  message: String,
-  details: String,
-  status: {
-    type: String,
-    default: "Pending",
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: true }
+);
 
-const Lead = mongoose.models.Lead || mongoose.model("Lead", leadSchema);
-
-export default Lead;
+export default mongoose.models.Lead || mongoose.model('Lead', LeadSchema);
