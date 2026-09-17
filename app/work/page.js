@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import MediaPreview, { isImageUrl } from "../components/MediaPreview";
 
 const FILTERS = ["All", "Weddings", "Commercials", "Short Films"];
 
 function isImageWork(work) {
-  return work.mediaType === "image" || /\.(gif|jpe?g|png|webp|avif)(\?|$)/i.test(work.cloudinaryUrl || "");
+  return isImageUrl(work);
 }
 
 function matchesFilter(work, filter) {
@@ -17,9 +18,7 @@ function matchesFilter(work, filter) {
 }
 
 function Media({ work, modal = false, onPlay }) {
-  const mediaClass = modal ? "max-h-[78vh] w-full object-contain" : "h-full w-full object-cover transition duration-700 group-hover:scale-105";
-  if (isImageWork(work)) return <img src={work.thumbnailUrl || work.cloudinaryUrl} alt={work.title} className={mediaClass} />;
-  return <video autoPlay muted={!modal} loop={!modal} controls={modal} playsInline preload="metadata" className={mediaClass} onPlay={onPlay}><source src={work.cloudinaryUrl} type="video/mp4" /></video>;
+  return <MediaPreview item={work} modal={modal} onPlay={onPlay} />;
 }
 
 function Card({ work, onOpen }) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import MediaPreview, { isImageUrl } from "../components/MediaPreview";
 
 const EMPTY_FORM = {
   title: "",
@@ -31,20 +32,11 @@ function formatDate(value) {
 }
 
 function isImage(item) {
-  return item.mediaType === "image" || /\.(gif|jpe?g|png|webp|avif)(\?|$)/i.test(item.cloudinaryUrl || "");
-}
-
-function MediaPreview({ item, large = false }) {
-  const className = large ? "h-full w-full object-cover" : "h-full w-full object-contain";
-  if (isImage(item)) {
-    return <img src={item.thumbnailUrl || item.cloudinaryUrl} alt="" className={className} />;
-  }
-  return <video className={className} muted preload="metadata" poster={item.thumbnailUrl || undefined}><source src={item.cloudinaryUrl} type="video/mp4" /></video>;
+  return isImageUrl(item);
 }
 
 function LibraryPreview({ item }) {
-  if (item.type === "image") return <img src={item.url} alt="" className="h-full w-full object-cover" />;
-  return <video className="h-full w-full object-cover" muted preload="metadata"><source src={item.url} type="video/mp4" /></video>;
+  return <MediaPreview item={item} />;
 }
 
 function Field({ label, children, required = false }) {

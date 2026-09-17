@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import MediaPreview, { isImageUrl } from "./components/MediaPreview";
 
 const WHATSAPP_LINK = "https://wa.me/YOUR_NUMBER";
 const HERO_IMAGES = [
@@ -24,7 +25,7 @@ function compactViews(value = 0) {
 }
 
 function isImageWork(work) {
-  return work.type === "image" || work.mediaType === "image" || /\.(gif|jpe?g|png|webp|avif)(\?|$)/i.test(work.url || work.cloudinaryUrl || "");
+  return isImageUrl(work);
 }
 
 function getCreatedTime(work) {
@@ -36,9 +37,7 @@ function isPinnedWork(work) {
 }
 
 function WorkThumbnail({ work, modal = false, onPlay }) {
-  const mediaClass = modal ? "max-h-[78vh] w-full object-contain" : "h-full w-full object-cover transition duration-700 group-hover:scale-105";
-  if (isImageWork(work)) return <img src={work.url || work.thumbnailUrl || work.cloudinaryUrl} alt={work.title} className={mediaClass} />;
-  return <video autoPlay muted={!modal} loop={!modal} controls={modal} playsInline preload="metadata" className={mediaClass} onPlay={onPlay}><source src={work.url || work.cloudinaryUrl} type="video/mp4" /></video>;
+  return <MediaPreview item={work} modal={modal} onPlay={onPlay} />;
 }
 
 function WorkCard({ work, onOpen }) {
