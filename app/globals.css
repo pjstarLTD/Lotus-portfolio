@@ -24,3 +24,35 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+#contact form > div button,
+#contact form > div a {
+  border-radius: 9999px;
+  transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease;
+}
+
+#contact form > div button {
+  border: 3px solid #fff0bd;
+  background: linear-gradient(105deg, #9c7535, #d7b56d 55%, #fff0bd);
+  color: #17120a;
+  box-shadow: 0 0 30px rgba(211, 171, 91, 0.2);
+}
+
+#contact form > div button:hover {
+  background: linear-gradient(105deg, #b88d45, #e4c57f 55%, #fff6d4);
+  box-shadow: 0 0 42px rgba(211, 171, 91, 0.4);
+  transform: translateY(-2px);
+}
+
+#contact form > div a {
+  border: 1px solid rgba(243, 220, 163, 0.55);
+  background: linear-gradient(105deg, rgba(139, 104, 47, 0.3), rgba(215, 181, 109, 0.12), rgba(255, 240, 189, 0.04));
+  padding: 0.7rem 1.1rem;
+  color: #e8cb8c;
+}
+
+#contact form > div a:hover {
+  border-color: #fff0bd;
+  box-shadow: 0 0 28px rgba(211, 171, 91, 0.24);
+  transform: translateY(-1px);
+}
