@@ -105,7 +105,7 @@ export default function MediaPreview({ item, modal = false, large = false, onPla
     return convertedPreview.source === sourceUrl ? <img {...protectedMediaProps} src={convertedPreview.url} alt={item?.title || ""} className={`${className} select-none`} onError={() => setFailedSource(sourceUrl)} /> : <div className="flex h-full items-center justify-center text-xs text-stone-500">Preparing preview...</div>;
   }
   if (kind === "image") return <img {...protectedMediaProps} src={browserImageUrl} alt={item?.title || ""} className={`${className} select-none`} onError={() => setFailedSource(sourceUrl)} />;
-  if (kind === "video") return <video {...protectedMediaProps} autoPlay muted={!modal} loop={!modal} controls={modal} controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline preload="metadata" className={className} onPlay={onPlay} onError={() => setFailedSource(sourceUrl)}><source src={sourceUrl} /></video>;
+  if (kind === "video") return <video {...protectedMediaProps} autoPlay muted={!modal} controls={modal} controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline preload="metadata" className={className} onPlay={onPlay} onTimeUpdate={(event) => { if (!modal && event.currentTarget.currentTime >= 5) event.currentTarget.pause(); }} onError={() => setFailedSource(sourceUrl)}><source src={sourceUrl} /></video>;
   if (failedSource === sourceUrl) return <UnsupportedPreview url={sourceUrl} title={item?.title} className={className} />;
 
   return <img {...protectedMediaProps} src={sourceUrl} alt={item?.title || ""} className={`${className} select-none`} onError={() => setFailedSource(sourceUrl)} />;
