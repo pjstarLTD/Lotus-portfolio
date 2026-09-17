@@ -27,6 +27,7 @@ export async function POST(request) {
       mediaType: body.mediaType === "image" ? "image" : "video",
       thumbnailUrl: body.thumbnailUrl?.trim() || undefined,
       duration: body.duration?.trim() || undefined,
+      isPinned: Boolean(body.isPinned),
     });
     return NextResponse.json(video, { status: 201 });
   } catch {

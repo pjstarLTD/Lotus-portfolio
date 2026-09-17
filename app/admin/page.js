@@ -10,10 +10,18 @@ const EMPTY_FORM = {
   cloudinaryUrl: "",
   thumbnailUrl: "",
   duration: "",
+  isPinned: false,
+};
+
+const EMPTY_MEDIA_FORM = {
+  title: "",
+  url: "",
+  type: "image",
 };
 
 const tabs = [
   { id: "portfolio", label: "Portfolio Content", detail: "Manage videos and images" },
+  { id: "media", label: "Media Library", detail: "Manage pinned gallery media" },
   { id: "inquiries", label: "Client Inquiries", detail: "View contact leads" },
 ];
 
@@ -34,17 +42,42 @@ function MediaPreview({ item, large = false }) {
   return <video className={className} muted preload="metadata" poster={item.thumbnailUrl || undefined}><source src={item.cloudinaryUrl} type="video/mp4" /></video>;
 }
 
+function LibraryPreview({ item }) {
+  if (item.type === "image") return <img src={item.url} alt="" className="h-full w-full object-cover" />;
+  return <video className="h-full w-full object-cover" muted preload="metadata"><source src={item.url} type="video/mp4" /></video>;
+}
+
 function Field({ label, children, required = false }) {
   return <label className="block"><span className="mb-2 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">{label}{required && <span className="ml-1 text-[#C1A063]">*</span>}</span>{children}</label>;
 }
 
 const inputClass = "w-full border border-white/10 bg-[#10100f] px-3.5 py-3 text-sm text-stone-100 outline-none transition placeholder:text-stone-700 focus:border-[#C1A063]/70";
 
+function MediaLibrary({ media, form, loading, saving, onChange, onSubmit, onRefresh, onTogglePinned, onDelete, onClose }) {
+  return <section className="fixed inset-0 z-20 overflow-y-auto bg-[#0A0A0A] px-5 py-6 sm:px-8 lg:px-12 lg:py-10"><div className="mx-auto grid max-w-[1500px] gap-10 xl:grid-cols-[360px_1fr]">
+    <button type="button" onClick={onClose} className="absolute right-5 top-6 text-[10px] uppercase tracking-[0.16em] text-stone-500 hover:text-[#C1A063] sm:right-8 lg:right-12">Close media library</button>
+    <form onSubmit={onSubmit} className="h-fit border border-white/10 bg-[#111110] p-5 sm:p-6">
+      <div className="mb-7"><p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#C1A063]">New media</p><h2 className="mt-2 text-xl">Add to the gallery</h2></div>
+      <div className="space-y-5">
+        <Field label="Title" required><input required name="title" value={form.title} onChange={onChange} className={inputClass} placeholder="A name for the image or video" /></Field>
+        <Field label="Media type" required><select name="type" value={form.type} onChange={onChange} className={inputClass}><option value="image">Image</option><option value="video">Video</option></select></Field>
+        <Field label="Media URL" required><input required type="url" name="url" value={form.url} onChange={onChange} className={inputClass} placeholder="https://..." /></Field>
+      </div>
+      <button disabled={saving} className="mt-7 w-full border border-[#C1A063]/60 bg-[#C1A063] px-4 py-3 text-xs font-medium uppercase tracking-[0.18em] text-[#0A0A0A] transition hover:bg-[#d2b475] disabled:cursor-wait disabled:opacity-60">{saving ? "Saving..." : "Add media"}</button>
+    </form>
+    <div><div className="mb-5 flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-[0.22em] text-stone-500">Gallery library</p><h2 className="mt-2 text-2xl">All media <span className="font-mono text-sm text-[#C1A063]">{media.length.toString().padStart(2, "0")}</span></h2></div><button type="button" onClick={onRefresh} className="text-[10px] uppercase tracking-[0.15em] text-stone-500 hover:text-[#C1A063]">Refresh</button></div>
+      {loading ? <p className="border-t border-white/10 py-12 text-sm text-stone-500">Loading media...</p> : media.length === 0 ? <div className="border-t border-white/10 py-12 text-sm text-stone-500">No media has been added yet.</div> : <div className="grid gap-5 border-t border-white/10 pt-5 sm:grid-cols-2 2xl:grid-cols-3">{media.map((item) => <article key={item._id} className="overflow-hidden border border-white/10 bg-[#111110]"><div className="relative aspect-[16/10] bg-[#080808]"><LibraryPreview item={item} /><span className="absolute left-3 top-3 bg-[#0A0A0A]/80 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-[#C1A063]">{item.type}</span></div><div className="p-4"><div className="flex items-start justify-between gap-4"><h3 className="text-base">{item.title}</h3><span className={`font-mono text-[9px] uppercase tracking-[0.12em] ${item.isPinned ? "text-[#C1A063]" : "text-stone-600"}`}>{item.isPinned ? "Pinned" : "Unpinned"}</span></div><div className="mt-5 flex gap-4 border-t border-white/10 pt-3"><button type="button" onClick={() => onTogglePinned(item)} className="text-[10px] uppercase tracking-[0.16em] text-stone-400 hover:text-[#C1A063]">{item.isPinned ? "Unpin" : "Pin"}</button><button type="button" onClick={() => onDelete(item._id)} className="text-[10px] uppercase tracking-[0.16em] text-stone-500 hover:text-red-300">Delete</button></div></div></article>)}</div>}
+    </div>
+  </div></section>;
+}
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("portfolio");
   const [videos, setVideos] = useState([]);
+  const [media, setMedia] = useState([]);
   const [leads, setLeads] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [mediaForm, setMediaForm] = useState(EMPTY_MEDIA_FORM);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [leadsLoading, setLeadsLoading] = useState(false);
@@ -54,6 +87,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     loadVideos();
+    loadMedia();
     loadLeads();
   }, []);
 
@@ -92,9 +126,29 @@ export default function AdminPage() {
     }
   }
 
+  async function loadMedia() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/media");
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to load media.");
+      setMedia(result);
+    } catch (loadError) {
+      setError(loadError.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function updateForm(event) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+  }
+
+  function updateMediaForm(event) {
+    const { name, value } = event.target;
+    setMediaForm((current) => ({ ...current, [name]: value }));
   }
 
   function startEditing(item) {
@@ -106,6 +160,7 @@ export default function AdminPage() {
       cloudinaryUrl: item.cloudinaryUrl || "",
       thumbnailUrl: item.thumbnailUrl || "",
       duration: item.duration || "",
+      isPinned: Boolean(item.isPinned),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -152,8 +207,66 @@ export default function AdminPage() {
     }
   }
 
+  async function saveMedia(event) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/media", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(mediaForm),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to save media.");
+      setMedia((current) => [result, ...current]);
+      setMediaForm(EMPTY_MEDIA_FORM);
+      setNotice("Media added to the library.");
+    } catch (saveError) {
+      setError(saveError.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function togglePinned(item) {
+    setError("");
+    try {
+      const response = await fetch("/api/media", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item._id, isPinned: !item.isPinned }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to update media.");
+      setMedia((current) => current.map((entry) => entry._id === item._id ? result : entry));
+    } catch (toggleError) {
+      setError(toggleError.message);
+    }
+  }
+
+  async function deleteMedia(id) {
+    if (!window.confirm("Delete this media item?")) return;
+    setError("");
+    try {
+      const response = await fetch("/api/media", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to delete media.");
+      setMedia((current) => current.filter((item) => item._id !== id));
+      setNotice("Media item deleted.");
+    } catch (deleteError) {
+      setError(deleteError.message);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-stone-100">
+      {activeTab === "media" && <MediaLibrary media={media} form={mediaForm} loading={loading} saving={saving} onChange={updateMediaForm} onSubmit={saveMedia} onRefresh={loadMedia} onTogglePinned={togglePinned} onDelete={deleteMedia} onClose={() => setActiveTab("portfolio")} />}
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(193,160,99,0.13),transparent_32%)]" />
       <div className="relative mx-auto max-w-[1500px] px-5 py-6 sm:px-8 lg:px-12 lg:py-10">
         <header className="flex items-end justify-between border-b border-white/10 pb-7">
@@ -178,6 +291,7 @@ export default function AdminPage() {
               <Field label="Cloudinary media URL" required><input required type="url" name="cloudinaryUrl" value={form.cloudinaryUrl} onChange={updateForm} className={inputClass} placeholder="https://res.cloudinary.com/..." /></Field>
               <Field label="Thumbnail URL"><input type="url" name="thumbnailUrl" value={form.thumbnailUrl} onChange={updateForm} className={inputClass} placeholder="Optional poster image" /></Field>
               <Field label="Duration"><input name="duration" value={form.duration} onChange={updateForm} className={inputClass} placeholder="02:15" /></Field>
+              <label className="flex items-center gap-3 border-t border-white/10 pt-4 text-sm text-stone-300"><input type="checkbox" name="isPinned" checked={form.isPinned} onChange={(event) => setForm((current) => ({ ...current, isPinned: event.target.checked }))} className="h-4 w-4 accent-[#C1A063]" />Show in pinned preview</label>
             </div>
             <button disabled={saving} className="mt-7 w-full border border-[#C1A063]/60 bg-[#C1A063] px-4 py-3 text-xs font-medium uppercase tracking-[0.18em] text-[#0A0A0A] transition hover:bg-[#d2b475] disabled:cursor-wait disabled:opacity-60">{saving ? "Saving..." : editingId ? "Save changes" : "Add work"}</button>
           </form>

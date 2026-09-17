@@ -13,7 +13,7 @@ export async function PATCH(request, { params }) {
   try {
     await connectToDatabase();
     const body = await request.json().catch(() => null);
-    const update = body && (body.title || body.cloudinaryUrl || body.category || body.mediaType || body.thumbnailUrl || body.duration)
+    const update = body && (body.title || body.cloudinaryUrl || body.category || body.mediaType || body.thumbnailUrl || body.duration || body.isPinned !== undefined)
       ? {
           ...(body.title !== undefined && { title: body.title.trim() }),
           ...(body.category !== undefined && { category: body.category.trim() }),
@@ -21,6 +21,7 @@ export async function PATCH(request, { params }) {
           ...(body.mediaType !== undefined && { mediaType: body.mediaType === "image" ? "image" : "video" }),
           ...(body.thumbnailUrl !== undefined && { thumbnailUrl: body.thumbnailUrl.trim() }),
           ...(body.duration !== undefined && { duration: body.duration.trim() }),
+          ...(body.isPinned !== undefined && { isPinned: Boolean(body.isPinned) }),
         }
       : { $inc: { views: 1 } };
     const video = await Video.findByIdAndUpdate(id, update, { new: true, runValidators: true }).lean();

@@ -24,13 +24,21 @@ function compactViews(value = 0) {
 }
 
 function isImageWork(work) {
-  return work.mediaType === "image" || /\.(gif|jpe?g|png|webp|avif)(\?|$)/i.test(work.cloudinaryUrl || "");
+  return work.type === "image" || work.mediaType === "image" || /\.(gif|jpe?g|png|webp|avif)(\?|$)/i.test(work.url || work.cloudinaryUrl || "");
+}
+
+function getCreatedTime(work) {
+  return new Date(work.createdAt || 0).getTime();
+}
+
+function isPinnedWork(work) {
+  return work.isPinned !== false;
 }
 
 function WorkThumbnail({ work, modal = false, onPlay }) {
   const mediaClass = modal ? "max-h-[78vh] w-full object-contain" : "h-full w-full object-cover transition duration-700 group-hover:scale-105";
-  if (isImageWork(work)) return <img src={work.thumbnailUrl || work.cloudinaryUrl} alt={work.title} className={mediaClass} />;
-  return <video autoPlay muted={!modal} loop={!modal} controls={modal} playsInline preload="metadata" className={mediaClass} onPlay={onPlay}><source src={work.cloudinaryUrl} type="video/mp4" /></video>;
+  if (isImageWork(work)) return <img src={work.url || work.thumbnailUrl || work.cloudinaryUrl} alt={work.title} className={mediaClass} />;
+  return <video autoPlay muted={!modal} loop={!modal} controls={modal} playsInline preload="metadata" className={mediaClass} onPlay={onPlay}><source src={work.url || work.cloudinaryUrl} type="video/mp4" /></video>;
 }
 
 function WorkCard({ work, onOpen }) {
@@ -38,10 +46,13 @@ function WorkCard({ work, onOpen }) {
 }
 
 export default function Home() {
-  const [videos, setVideos] = useState([]);
+  const [mediaItems, setMediaItems] = useState([]);
+  const [legacyVideos, setLegacyVideos] = useState([]);
+  const [showAllMedia, setShowAllMedia] = useState(false);
+  const [galleryFilter, setGalleryFilter] = useState("all");
+  const [gallerySort, setGallerySort] = useState("newest");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [seen, setSeen] = useState(new Set());
   const [form, setForm] = useState({ name: "", whatsapp: "", message: "", phone: "", details: "" });
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState("");
@@ -49,16 +60,38 @@ export default function Home() {
   const [heroImageIndex, setHeroImageIndex] = useState(0);
   const [selectedWork, setSelectedWork] = useState(null);
 
+  async function fetchGallery() {
+    const [mediaResponse, videosResponse] = await Promise.all([
+        fetch("/api/media"),
+        fetch("/api/videos"),
+    ]);
+    if (!mediaResponse.ok || !videosResponse.ok) throw new Error("Unable to load the gallery.");
+    return {
+      media: await mediaResponse.json(),
+      videos: await videosResponse.json(),
+    };
+  }
+
   useEffect(() => {
-    fetch("/api/videos")
-      .then((response) => {
-        if (!response.ok) throw new Error("Unable to load the gallery.");
-        return response.json();
+    fetchGallery()
+      .then((gallery) => {
+        setMediaItems(gallery.media);
+        setLegacyVideos(gallery.videos);
       })
-      .then(setVideos)
       .catch((error) => setLoadError(error.message))
       .finally(() => setLoading(false));
   }, []);
+
+  function toggleAllMedia() {
+    const nextValue = !showAllMedia;
+    setShowAllMedia(nextValue);
+  }
+
+  const galleryItems = [...mediaItems, ...legacyVideos];
+  const visibleGallery = galleryItems
+    .filter((item) => galleryFilter === "all" ? isPinnedWork(item) : galleryFilter === "images" ? isImageWork(item) : !isImageWork(item))
+    .filter((item) => galleryFilter === "all" || gallerySort === "newest" || isPinnedWork(item))
+    .sort((first, second) => getCreatedTime(second) - getCreatedTime(first));
 
   useEffect(() => {
     function closeOnEscape(event) {
@@ -75,17 +108,6 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, []);
-
-  async function countView(id) {
-    if (seen.has(id)) return;
-    setSeen((current) => new Set(current).add(id));
-    setVideos((current) => current.map((video) => video._id === id ? { ...video, views: (video.views || 0) + 1 } : video));
-    try {
-      await fetch(`/api/videos/${id}`, { method: "PATCH" });
-    } catch {
-      // Keep playback uninterrupted if the count request is unavailable.
-    }
-  }
 
   async function submitInquiry(event) {
     event.preventDefault();
@@ -153,14 +175,16 @@ export default function Home() {
       </section>
 
       <section id="portfolio" className="px-6 py-24 sm:px-10 lg:px-16 lg:py-36">
-        <div className="mb-12 flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="mb-4 font-mono text-xs uppercase tracking-[0.28em] text-amber-200/70">Selected work / 01</p><h2 className="text-4xl tracking-[-0.04em] sm:text-6xl">The moving image.</h2></div><p className="max-w-xs text-sm leading-6 text-stone-500">A selection of films made with patience, instinct, and a little bit of light.</p></div>
+        <div className="mb-12 flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="mb-4 font-mono text-xs uppercase tracking-[0.28em] text-amber-200/70">{showAllMedia ? "Gallery / all media" : "Gallery / pinned selection"}</p><h2 className="text-4xl tracking-[-0.04em] sm:text-6xl">The moving image.</h2></div><button type="button" onClick={toggleAllMedia} className="self-start border border-white/15 px-4 py-2 text-xs uppercase tracking-[0.16em] text-stone-400 transition hover:border-[#C1A063] hover:text-[#C1A063] sm:self-auto">{showAllMedia ? "Show pinned" : "View all media"}</button></div>
+        <div className="mb-3 flex gap-2 overflow-x-auto border-b border-white/10 pb-4" aria-label="Filter gallery"><span className="mr-3 shrink-0 self-center font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">Filter</span>{[["all", "All"], ["images", "Images"], ["videos", "Videos"]].map(([value, label]) => <button type="button" key={value} onClick={() => { setGalleryFilter(value); if (value === "all") setGallerySort("pinned"); }} className={`shrink-0 border px-4 py-2 text-xs uppercase tracking-[0.12em] transition ${galleryFilter === value ? "border-[#C1A063] bg-[#C1A063] text-[#0A0A0A]" : "border-white/15 text-stone-400 hover:border-[#C1A063]/70 hover:text-[#C1A063]"}`}>{label}</button>)}</div>
+        {galleryFilter !== "all" && <div className="mb-8 flex items-center gap-2" aria-label="Sort gallery"><span className="mr-2 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-600">Show</span>{[["newest", "Newest"], ["pinned", "Pinned"]].map(([value, label]) => <button type="button" key={value} onClick={() => setGallerySort(value)} className={`border px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] transition ${gallerySort === value ? "border-[#C1A063] text-[#C1A063]" : "border-white/15 text-stone-500 hover:border-[#C1A063]/70 hover:text-[#C1A063]"}`}>{label}</button>)}</div>}
         {loading && <p className="border-t border-white/10 py-10 text-sm text-stone-500">Loading the reel...</p>}
         {loadError && <p className="border-t border-red-200/20 py-10 text-sm text-red-200">{loadError}</p>}
-        {!loading && !loadError && videos.length === 0 && <p className="border-t border-white/10 py-10 text-sm text-stone-500">New work is being prepared. Check back soon.</p>}
-        {!loading && !loadError && videos.length > 0 && <><div className="grid gap-x-6 gap-y-12 border-t border-white/10 pt-8 sm:grid-cols-2 lg:grid-cols-3">{videos.slice(0, 3).map((video) => <WorkCard key={video._id} work={video} onOpen={(work) => { setSelectedWork(work); if (!isImageWork(work)) countView(work._id); }} />)}</div><div className="mt-14 text-center"><a href="/work" className="inline-flex items-center gap-3 border border-[#C1A063]/60 px-6 py-3 text-xs uppercase tracking-[0.2em] text-[#C1A063] transition hover:bg-[#C1A063] hover:text-[#0A0A0A]">View all works <span aria-hidden="true">-&gt;</span></a></div></>}
+        {!loading && !loadError && visibleGallery.length === 0 && <p className="border-t border-white/10 py-10 text-sm text-stone-500">No {galleryFilter === "all" ? "gallery media" : galleryFilter} found.</p>}
+        {!loading && !loadError && visibleGallery.length > 0 && <div className="grid gap-x-6 gap-y-12 border-t border-white/10 pt-8 sm:grid-cols-2 lg:grid-cols-3">{visibleGallery.slice(0, showAllMedia ? visibleGallery.length : 3).map((item) => <WorkCard key={`${item.type || item.mediaType || "video"}-${item._id}`} work={item} onOpen={(work) => setSelectedWork(work)} />)}</div>}
       </section>
 
-      {selectedWork && <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]/95 p-5 sm:p-10" role="dialog" aria-modal="true" aria-label={selectedWork.title} onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedWork(null); }}><div className="relative w-full max-w-6xl"><button type="button" onClick={() => setSelectedWork(null)} className="absolute -top-12 right-0 text-xs uppercase tracking-[0.18em] text-stone-400 hover:text-white">Close <span aria-hidden="true">X</span></button><div className="overflow-hidden rounded-md bg-black"><WorkThumbnail work={selectedWork} modal onPlay={() => countView(selectedWork._id)} /></div><div className="flex items-center justify-between gap-4 pt-4"><div><h2 className="text-xl">{selectedWork.title}</h2><p className="mt-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[#C1A063]">{selectedWork.category || "General"}</p></div><span className="font-mono text-xs text-stone-500">{selectedWork.duration || "00:00"}</span></div></div></div>}
+      {selectedWork && <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]/95 p-5 sm:p-10" role="dialog" aria-modal="true" aria-label={selectedWork.title} onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedWork(null); }}><div className="relative w-full max-w-6xl"><button type="button" onClick={() => setSelectedWork(null)} className="absolute -top-12 right-0 text-xs uppercase tracking-[0.18em] text-stone-400 hover:text-white">Close <span aria-hidden="true">X</span></button><div className="overflow-hidden rounded-md bg-black"><WorkThumbnail work={selectedWork} modal /></div><div className="flex items-center justify-between gap-4 pt-4"><div><h2 className="text-xl">{selectedWork.title}</h2><p className="mt-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[#C1A063]">{selectedWork.type || "media"}</p></div><span className="font-mono text-xs text-stone-500">{selectedWork.type || "media"}</span></div></div></div>}
 
       <section id="contact" className="border-t border-white/10 bg-[#151512] px-6 py-24 sm:px-10 lg:px-16 lg:py-32"><div className="grid gap-16 lg:grid-cols-[1fr_1.1fr] lg:gap-28"><div><p className="mb-5 font-mono text-xs uppercase tracking-[0.28em] text-amber-200/70">Let&apos;s make something</p><h2 className="max-w-lg text-5xl leading-[0.95] tracking-[-0.05em] sm:text-7xl">Have a story in mind?</h2><p className="mt-8 max-w-sm text-sm leading-7 text-stone-400">Tell us a little about it. We&apos;ll get back to you with thoughtful next steps.</p></div><form onSubmit={submitInquiry} className="space-y-8">{[["name", "Your name", "Jane Smith"], ["whatsapp", "WhatsApp phone number", "+1 555 000 0000"]].map(([name, label, placeholder]) => <label key={name} className="block border-b border-white/20 pb-3"><span className="mb-2 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">{label}</span><input required name={name} value={form[name]} onChange={(event) => setForm({ ...form, [name]: event.target.value })} className="w-full bg-transparent text-lg outline-none placeholder:text-stone-700" placeholder={placeholder} /></label>)}<label className="block border-b border-white/20 pb-3"><span className="mb-2 block font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">Project details</span><textarea name="message" value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} rows="3" className="w-full resize-none bg-transparent text-lg outline-none placeholder:text-stone-700" placeholder="What are you bringing to life?" /></label><div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between"><button disabled={sending} className="border border-amber-100/50 px-6 py-3 text-xs uppercase tracking-[0.2em] text-amber-100 hover:bg-amber-100 hover:text-stone-950 disabled:opacity-50">{sending ? "Sending..." : "Send inquiry ↗"}</button><a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="text-xs uppercase tracking-[0.16em] text-stone-400 hover:text-white">Chat on WhatsApp Now ↗</a></div>{notice && <p role="status" className="text-sm text-amber-100">{notice} <a className="underline" href={WHATSAPP_LINK} target="_blank" rel="noreferrer">Chat on WhatsApp Now</a></p>}{formError && <p role="alert" className="text-sm text-red-200">{formError}</p>}</form></div></section>
     </main>
