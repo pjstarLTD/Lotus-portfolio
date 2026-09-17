@@ -15,6 +15,12 @@ function getPathname(url = "") {
   }
 }
 
+function getCloudinaryImageUrl(url = "") {
+  if (!/https?:\/\/res\.cloudinary\.com\//i.test(url) || !url.includes("/upload/")) return "";
+  if (/\/upload\/[^/]*f_/i.test(url)) return url;
+  return url.replace("/upload/", "/upload/f_jpg/");
+}
+
 export function getMediaKind(item) {
   const url = item?.url || item?.cloudinaryUrl || "";
   const pathname = getPathname(url);
@@ -53,6 +59,8 @@ export default function MediaPreview({ item, modal = false, large = false, onPla
   const url = item?.url || item?.thumbnailUrl || item?.cloudinaryUrl || "";
   const sourceUrl = item?.url || item?.cloudinaryUrl || "";
   const kind = getMediaKind(item);
+  const cloudinaryImageUrl = getCloudinaryImageUrl(sourceUrl);
+  const browserImageUrl = cloudinaryImageUrl && (kind === "image" || kind === "heic") ? cloudinaryImageUrl : sourceUrl;
   const className = modal
     ? "max-h-[78vh] w-full object-contain"
     : large
@@ -91,11 +99,12 @@ export default function MediaPreview({ item, modal = false, large = false, onPla
 
   if (!sourceUrl) return <UnsupportedPreview url="#" title={item?.title} className={className} />;
   if (kind === "pdf") return <iframe {...protectedMediaProps} src={sourceUrl} title={item?.title || "PDF document"} className="h-full min-h-64 w-full border-0 select-none" />;
+  if (kind === "heic" && cloudinaryImageUrl) return <img {...protectedMediaProps} src={browserImageUrl} alt={item?.title || ""} className={`${className} select-none`} onError={() => setFailedSource(sourceUrl)} />;
   if (kind === "heic") {
     if (failedSource === sourceUrl) return <UnsupportedPreview url={sourceUrl} title={item?.title} className={className} />;
     return convertedPreview.source === sourceUrl ? <img {...protectedMediaProps} src={convertedPreview.url} alt={item?.title || ""} className={`${className} select-none`} onError={() => setFailedSource(sourceUrl)} /> : <div className="flex h-full items-center justify-center text-xs text-stone-500">Preparing preview...</div>;
   }
-  if (kind === "image") return <img {...protectedMediaProps} src={sourceUrl} alt={item?.title || ""} className={`${className} select-none`} onError={() => setFailedSource(sourceUrl)} />;
+  if (kind === "image") return <img {...protectedMediaProps} src={browserImageUrl} alt={item?.title || ""} className={`${className} select-none`} onError={() => setFailedSource(sourceUrl)} />;
   if (kind === "video") return <video {...protectedMediaProps} autoPlay muted={!modal} loop={!modal} controls={modal} controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline preload="metadata" className={className} onPlay={onPlay} onError={() => setFailedSource(sourceUrl)}><source src={sourceUrl} /></video>;
   if (failedSource === sourceUrl) return <UnsupportedPreview url={sourceUrl} title={item?.title} className={className} />;
 
