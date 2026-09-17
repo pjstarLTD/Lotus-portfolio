@@ -182,9 +182,11 @@ export default function Home() {
         {!loading && !loadError && visibleGallery.length === 0 && <p className="border-t border-white/10 py-10 text-sm text-stone-500">No {galleryFilter === "all" ? "gallery media" : galleryFilter} found.</p>}
         {!loading && !loadError && visibleGallery.length > 0 && <>
           <div className="grid gap-x-6 gap-y-12 border-t border-white/10 pt-8 sm:grid-cols-2 lg:grid-cols-3">{visibleGallery.slice(0, showAllMedia ? visibleGallery.length : 3).map((item) => <WorkCard key={`${item.type || item.mediaType || "video"}-${item._id}`} work={item} onOpen={(work) => setSelectedWork(work)} />)}</div>
-          <button type="button" onClick={toggleAllMedia} className="group mt-20 block w-full border-y border-[#C1A063]/40 py-7 text-left transition hover:border-[#C1A063] hover:bg-[#C1A063] hover:text-[#0A0A0A] sm:py-9">
-            <span className="flex items-center justify-between gap-6 px-1 sm:px-3"><span><span className="block font-mono text-[10px] uppercase tracking-[0.24em] text-[#C1A063] transition group-hover:text-[#0A0A0A]">{showAllMedia ? "Back to the selection" : "There is more to see"}</span><span className="mt-2 block text-3xl tracking-[-0.05em] sm:text-5xl">{showAllMedia ? "Show pinned work" : "Enter the full reel"}</span></span><span className="flex shrink-0 items-center gap-3"><span className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-stone-500 transition group-hover:text-[#0A0A0A] sm:block">{showAllMedia ? `${visibleGallery.length} pieces` : `${galleryItems.length} pieces`}</span><span aria-hidden="true" className="text-3xl transition-transform duration-300 group-hover:translate-x-2">-&gt;</span></span></span>
-          </button>
+          <div className="flex justify-center pt-8">
+            <button type="button" onClick={toggleAllMedia} className="group relative overflow-hidden rounded-full border border-[#f3dca3]/70 bg-gradient-to-r from-[#8b682f] via-[#d7b56d] to-[#fff0bd] px-6 py-3 text-[11px] font-medium uppercase tracking-[0.16em] text-[#17120a] shadow-[0_0_28px_rgba(211,171,91,0.18)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_38px_rgba(211,171,91,0.38)]">
+              <span className="relative z-10 flex items-center gap-3"><span>{showAllMedia ? "Show pinned" : "View all media"}</span><span aria-hidden="true" className="text-base leading-none transition-transform duration-300 group-hover:translate-x-1">-&gt;</span></span>
+            </button>
+          </div>
         </>}
       </section>
 
