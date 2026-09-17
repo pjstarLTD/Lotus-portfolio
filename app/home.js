@@ -139,13 +139,13 @@ export default function Home() {
       <section className="relative flex min-h-[92vh] flex-col border-b border-white/10 bg-[#0a0a0a] px-6 py-7 sm:px-10 lg:px-16">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_48%,rgba(193,160,99,0.22),transparent_24%),radial-gradient(circle_at_58%_50%,rgba(193,160,99,0.08),transparent_34%)]" />
         <nav className="relative z-10 flex items-center justify-between">
-          <a href="#top" className="font-mono text-sm tracking-[0.35em]">LOTUS</a>
+          <a href="#top" className="font-elegance text-sm tracking-[0.35em]">LOTUS</a>
           <a href="#contact" className="rounded-full border border-[#d9b875]/50 bg-gradient-to-r from-[#8b682f]/30 via-[#d7b56d]/20 to-[#fff0bd]/10 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#e8cb8c] transition hover:border-[#fff0bd] hover:text-white">Start a project <span aria-hidden="true">↗</span></a>
         </nav>
         <div className="relative z-10 my-auto grid max-w-7xl items-center gap-12 pb-16 pt-24 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8 lg:pt-28">
           <div className="max-w-2xl">
             <p className="mb-7 font-mono text-xs uppercase tracking-[0.28em] text-[#C1A063]">INDEPENDENT FILM &amp; VISUAL STORIES</p>
-            <h1 className="max-w-xl text-7xl font-medium leading-[0.87] tracking-[-0.065em] text-white sm:text-8xl lg:text-[8.5rem]">Make it<br /><span className="font-serif font-normal text-[#C1A063]">matter.</span></h1>
+            <h1 className="font-majestic max-w-xl text-6xl font-normal leading-[0.92] tracking-[0.01em] text-white sm:text-7xl lg:text-8xl">Make it<br /><span className="text-[#C1A063]">matter.</span></h1>
             <div className="mt-10 flex max-w-xl flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
               <p className="max-w-sm text-base leading-7 text-stone-400">Cinematic videography for people, places, and ideas that deserve to be remembered.</p>
               <a href="#portfolio" className="group flex shrink-0 items-center gap-3 rounded-full border-2 border-[#f3dca3]/70 bg-gradient-to-r from-[#8b682f] via-[#d7b56d] to-[#fff0bd] px-5 py-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#17120a] shadow-[0_0_24px_rgba(211,171,91,0.16)] transition hover:-translate-y-0.5 hover:shadow-[0_0_34px_rgba(211,171,91,0.35)]">VIEW THE WORK <span aria-hidden="true" className="text-base transition-transform group-hover:translate-y-1">↓</span></a>
