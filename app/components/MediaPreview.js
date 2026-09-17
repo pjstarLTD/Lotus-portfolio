@@ -80,7 +80,7 @@ export default function MediaPreview({ item, modal = false, large = false, onPla
         if (!cancelled) setConvertedPreview({ source: sourceUrl, url: objectUrl });
       })
       .catch(() => {
-        if (!cancelled) setFailed(true);
+        if (!cancelled) setFailedSource(sourceUrl);
       });
 
     return () => {
