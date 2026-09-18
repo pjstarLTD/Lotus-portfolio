@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --lotus-gold: #C1A063;
+  --lotus-white: #ffffff;
 }
 
 @theme inline {
@@ -37,11 +39,40 @@ nav > a:first-child {
   font-size: 1.5rem;
   font-style: italic;
   letter-spacing: 0.08em;
+  color: var(--lotus-gold);
 }
 
 #contact > div > div:first-child > h2 {
   font-family: var(--font-elegance);
   letter-spacing: -0.02em;
+  color: var(--lotus-white);
+}
+
+#portfolio > div:first-child > p {
+  font-family: var(--font-vintage-vibe);
+  font-size: 1.5rem;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  color: var(--lotus-gold);
+}
+
+#portfolio > div:first-child > h2 {
+  font-family: var(--font-elegance);
+  letter-spacing: -0.02em;
+  color: var(--lotus-white);
+}
+
+.lotus-hero-kicker {
+  font-family: var(--font-vintage-vibe);
+  font-size: 0.75rem;
+  font-style: italic;
+  letter-spacing: 0.28em;
+  color: var(--lotus-gold);
+}
+
+nav > a:last-child {
+  font-family: var(--font-vintage-vibe);
+  color: var(--lotus-gold);
 }
 
 #contact form > div button,
